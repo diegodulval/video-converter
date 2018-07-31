@@ -19,8 +19,10 @@
   "homepage": "https://github.com/diegodulval/video-converter#readme",
   "dependencies": {
     "config": "^2.0.1",
+    "cookie-parser": "^1.4.3",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
-    "socket.io": "^2.1.1"
+    "socket.io": "^2.1.1",
+    "uuid": "^3.3.2"
   }
 }
