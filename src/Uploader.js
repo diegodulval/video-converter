@@ -109,9 +109,9 @@ export default class Uploader extends Component {
       })
         .then(res => {
           let file = res.data;
-          /* if (file.uploaded) {
+          if (file.uploaded) {
             this.props.initEncoding(file.path, this.state.convert_ext);
-          } */
+          }
         })
         .catch(err => {
           console.log(err);
