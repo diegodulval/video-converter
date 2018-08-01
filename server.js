@@ -56,11 +56,25 @@ app.post("/upload", upload.single("file"), (req, res) => {
         });
       }
     });
+    createEncodeDir();
   } else {
     res.json({
       uploaded: false
     });
   }
 });
+
+let createEncodeDir = () => {
+  let dir = path.join(__dirname, "/encoded/");
+  fs.exists(dir, exists => {
+    if (!exists) {
+      fs.mkdir(dir, function(err) {
+        if (err) {
+          return console.error(err);
+        }
+      });
+    }
+  });
+};
 
 server.listen(PORT, () => console.log("Server running on Port: " + PORT));
