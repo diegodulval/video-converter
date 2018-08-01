@@ -14,6 +14,7 @@ const hbjs = require("handbrake-js");
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.use("/", express.static(__dirname + "/public"));
+app.use('/encoded', express.static(__dirname + '/encoded'));
 app.use(cookieParser());
 app.use(cookieMiddleware());
 
@@ -74,29 +75,33 @@ let createEncodeDir = () => {
     }
   });
 };
-
 io.on("connection", socket => {
   socket.on("encode", data => {
     let handbrake,
       completed = false,
       file = data.file,
+      user = data.user,
       convert_ext = data.convert_ext,
-      input = path.join(__dirname, "/encoded/", file),
+      input = path.join(__dirname, "/uploads/", file),
       encoded_file = file + "_to_." + convert_ext,
-      output = PATH.JOIN(__dirname, "/encoded/", encoded_file);
+      output = path.join(__dirname, "/encoded/", encoded_file);
 
     handbrake = hbjs
-      .spawn({ input, output, preset: "Universal" })
+      .spawn({
+        input: input,
+        output: output,
+        preset: "Universal"
+      })
       .on("progress", progress => {
         socket.emit("progress", {
           percentage: progress.percentComplete,
-          eta: process.eta
+          eta: progress.eta
         });
       })
       .on("complete", () => {
         completed = true;
         socket.emit("complete", {
-          encoded_file
+          encoded_file: encoded_file
         });
       });
 
