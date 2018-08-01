@@ -2,6 +2,7 @@ import React, { Fragment, Component } from "react";
 import toastr from "toastr";
 import "./Encoder.scss";
 import Progress from "./Progress";
+import socketIOClient from "socket.io-client";
 
 export default class Encoder extends Component {
   constructor(props) {
@@ -15,9 +16,37 @@ export default class Encoder extends Component {
     };
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.socket = socketIOClient("ws://127.0.0.1:3000");
+
+    this.socket.emit("encode", {
+      file: this.state.file,
+      convert_ext: this.state.convert_ext
+    });
+
+    this.socket.on(
+      "progress",
+      function(data) {
+        this.setState({
+          progress: data.percentage,
+          eta: data.eta
+        });
+      }.bind(this)
+    );
+
+    this.socket.on(
+      "complete",
+      function(data) {
+        this.setState({
+          encoded_file: data.encoded_file
+        });
+        toastr.success("Encoding complete");
+      }.bind(this)
+    );
+  }
 
   componentWillUnmount() {
+    this.socket.disconnect();
     this.props.newEncode();
   }
 
