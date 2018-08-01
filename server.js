@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const cookieMiddleware = require("./middleware/userCookie");
 const fs = require("fs");
 const path = require("path");
+const hbjs = require("handbrake-js");
 
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
@@ -31,11 +32,8 @@ app.get("*", (req, res) => {
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  console.log(req);
-
   if (req.file) {
     let video = req.file;
-    console.log("Ta aqui");
     let upload_path = path.join(__dirname, "/uploads/");
 
     fs.exists(upload_path, exists => {
@@ -77,4 +75,45 @@ let createEncodeDir = () => {
   });
 };
 
+io.on("connection", socket => {
+  socket.on("encode", data => {
+    let handbrake,
+      completed = false,
+      file = data.file,
+      convert_ext = data.convert_ext,
+      input = path.join(__dirname, "/encoded/", file),
+      encoded_file = file + "_to_." + convert_ext,
+      output = PATH.JOIN(__dirname, "/encoded/", encoded_file);
+
+    handbrake = hbjs
+      .spawn({ input, output, preset: "Universal" })
+      .on("progress", progress => {
+        socket.emit("progress", {
+          percentage: progress.percentComplete,
+          eta: process.eta
+        });
+      })
+      .on("complete", () => {
+        completed = true;
+        socket.emit("complete", {
+          encoded_file
+        });
+      });
+
+    socket.on("disconnect", () => {
+      if (!completed) {
+        console.log("Not completed");
+        handbrake.cancel();
+        deleteVideo(input);
+        deleteVideo(output);
+      }
+    });
+  });
+});
+
+let deleteVideo = path => {
+  fs.unlink(path, err => {
+    if (err) throw err;
+  });
+};
 server.listen(PORT, () => console.log("Server running on Port: " + PORT));
